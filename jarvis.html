@@ -1,0 +1,527 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <meta name="mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="JARVIS" />
+  <meta name="theme-color" content="#0a0f1e" />
+  <title>JARVIS</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    :root {
+      --blue: #00b4d8;
+      --cyan: #90e0ef;
+      --dark: #0a0f1e;
+      --panel: rgba(0,180,216,0.06);
+      --border: rgba(0,180,216,0.25);
+      --glow: rgba(0,180,216,0.5);
+      --text: #caf0f8;
+      --muted: rgba(144,224,239,0.55);
+    }
+
+    html, body {
+      height: 100%;
+      background: var(--dark);
+      overflow: hidden;
+      font-family: 'Courier New', Courier, monospace;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    #app {
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      height: 100dvh;
+      position: relative;
+      overflow: hidden;
+    }
+
+    #app::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(ellipse at 50% 0%, rgba(0,180,216,0.13) 0%, transparent 60%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .scan-line {
+      position: absolute;
+      left: 0; right: 0;
+      height: 1px;
+      background: linear-gradient(90deg, transparent, rgba(0,180,216,0.28), transparent);
+      animation: scan 7s linear infinite;
+      pointer-events: none;
+      z-index: 1;
+    }
+
+    @keyframes scan {
+      0% { top: 0; }
+      100% { top: 100%; }
+    }
+
+    /* ── Header ── */
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 14px 16px 12px;
+      border-bottom: 0.5px solid var(--border);
+      background: rgba(0,0,0,0.35);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .status-dot {
+      width: 7px; height: 7px;
+      border-radius: 50%;
+      background: var(--blue);
+      box-shadow: 0 0 6px var(--blue);
+      animation: pulse-dot 2s infinite;
+      flex-shrink: 0;
+    }
+
+    @keyframes pulse-dot {
+      0%,100% { opacity: 1; }
+      50% { opacity: 0.35; }
+    }
+
+    .header-title { font-size: 14px; font-weight: bold; color: var(--blue); letter-spacing: 3px; }
+    .header-sub { font-size: 9px; color: var(--muted); letter-spacing: 1.5px; margin-top: 2px; }
+    .header-time { margin-left: auto; font-size: 11px; color: var(--muted); letter-spacing: 1px; }
+
+    /* ── Orb ── */
+    .orb-area {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 22px 0 14px;
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .orb-wrap { position: relative; width: 110px; height: 110px; }
+
+    .orb-ring {
+      position: absolute;
+      border-radius: 50%;
+      border: 1px solid var(--border);
+    }
+    .orb-ring:nth-child(1) { inset: 0; animation: spin 9s linear infinite; }
+    .orb-ring:nth-child(2) { inset: 7px; border-color: rgba(0,180,216,0.16); animation: spin 14s linear infinite reverse; }
+    .orb-ring:nth-child(3) { inset: 14px; border-color: rgba(0,180,216,0.10); animation: spin 20s linear infinite; }
+
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to   { transform: rotate(360deg); }
+    }
+
+    .orb {
+      position: absolute;
+      inset: 22px;
+      border-radius: 50%;
+      background: radial-gradient(circle at 38% 36%, rgba(0,180,216,0.32), rgba(0,180,216,0.07) 70%);
+      border: 1px solid rgba(0,180,216,0.38);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      animation: breathe 3s ease-in-out infinite;
+      transition: box-shadow 0.2s;
+      -webkit-tap-highlight-color: transparent;
+    }
+
+    .orb.listening {
+      animation: listen 0.8s ease-in-out infinite;
+      box-shadow: 0 0 0 5px rgba(0,180,216,0.2);
+    }
+
+    .orb.thinking {
+      animation: think 1.2s ease-in-out infinite;
+    }
+
+    @keyframes breathe {
+      0%,100% { box-shadow: 0 0 10px var(--glow); }
+      50%      { box-shadow: 0 0 24px var(--glow), 0 0 50px rgba(0,180,216,0.18); }
+    }
+    @keyframes listen {
+      0%,100% { transform: scale(1); box-shadow: 0 0 14px var(--glow), 0 0 0 7px rgba(0,180,216,0.18); }
+      50%      { transform: scale(1.07); box-shadow: 0 0 28px var(--glow), 0 0 0 12px rgba(0,180,216,0.08); }
+    }
+    @keyframes think {
+      0%,100% { background: radial-gradient(circle at 38% 36%, rgba(0,180,216,0.32), rgba(0,180,216,0.07) 70%); }
+      50%      { background: radial-gradient(circle at 62% 64%, rgba(144,224,239,0.42), rgba(0,180,216,0.09) 70%); }
+    }
+
+    .orb svg { width: 24px; height: 24px; pointer-events: none; }
+
+    .orb-label {
+      margin-top: 13px;
+      font-size: 10px;
+      color: var(--muted);
+      letter-spacing: 2.5px;
+      text-transform: uppercase;
+    }
+
+    /* ── Chat ── */
+    .chat {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 10px 14px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+      position: relative;
+      z-index: 2;
+      min-height: 0;
+    }
+
+    .chat::-webkit-scrollbar { display: none; }
+
+    .msg {
+      max-width: 88%;
+      font-size: 13px;
+      line-height: 1.6;
+      padding: 10px 13px;
+      border-radius: 12px;
+      animation: msg-in 0.2s ease-out;
+      word-break: break-word;
+    }
+
+    @keyframes msg-in {
+      from { opacity: 0; transform: translateY(7px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    .msg.user {
+      align-self: flex-end;
+      background: rgba(0,180,216,0.11);
+      border: 0.5px solid rgba(0,180,216,0.28);
+      color: var(--text);
+    }
+
+    .msg.ai {
+      align-self: flex-start;
+      background: rgba(0,0,0,0.38);
+      border: 0.5px solid var(--border);
+      color: var(--text);
+    }
+
+    .msg-speaker {
+      font-size: 9px;
+      color: var(--blue);
+      letter-spacing: 2px;
+      margin-bottom: 5px;
+      text-transform: uppercase;
+    }
+
+    .thinking-indicator {
+      align-self: flex-start;
+      display: flex;
+      align-items: center;
+      gap: 5px;
+      padding: 11px 15px;
+      background: rgba(0,0,0,0.38);
+      border: 0.5px solid var(--border);
+      border-radius: 12px;
+      animation: msg-in 0.2s ease-out;
+    }
+
+    .dot {
+      width: 5px; height: 5px;
+      border-radius: 50%;
+      background: var(--blue);
+    }
+    .dot:nth-child(1) { animation: bounce 1s 0s infinite; }
+    .dot:nth-child(2) { animation: bounce 1s 0.2s infinite; }
+    .dot:nth-child(3) { animation: bounce 1s 0.4s infinite; }
+
+    @keyframes bounce {
+      0%,60%,100% { transform: translateY(0); opacity: 0.35; }
+      30%          { transform: translateY(-5px); opacity: 1; }
+    }
+
+    /* ── Input area ── */
+    .input-area {
+      padding: 10px 14px 16px;
+      border-top: 0.5px solid var(--border);
+      background: rgba(0,0,0,0.32);
+      flex-shrink: 0;
+      position: relative;
+      z-index: 2;
+    }
+
+    .quick-btns {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 10px;
+      overflow-x: auto;
+      scrollbar-width: none;
+      -webkit-overflow-scrolling: touch;
+    }
+    .quick-btns::-webkit-scrollbar { display: none; }
+
+    .quick {
+      flex-shrink: 0;
+      font-size: 10px;
+      padding: 5px 11px;
+      border-radius: 20px;
+      border: 0.5px solid var(--border);
+      background: var(--panel);
+      color: var(--cyan);
+      cursor: pointer;
+      letter-spacing: 0.4px;
+      font-family: 'Courier New', monospace;
+      white-space: nowrap;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .quick:active { background: rgba(0,180,216,0.18); border-color: var(--blue); }
+
+    .input-row {
+      display: flex;
+      gap: 9px;
+      align-items: flex-end;
+    }
+
+    .text-input {
+      flex: 1;
+      background: rgba(0,180,216,0.05);
+      border: 0.5px solid var(--border);
+      border-radius: 22px;
+      padding: 10px 15px;
+      font-size: 14px;
+      color: var(--text);
+      font-family: 'Courier New', monospace;
+      resize: none;
+      outline: none;
+      line-height: 1.45;
+      max-height: 90px;
+      overflow-y: auto;
+      scrollbar-width: none;
+      transition: border-color 0.2s;
+      -webkit-appearance: none;
+    }
+    .text-input::-webkit-scrollbar { display: none; }
+    .text-input::placeholder { color: var(--muted); }
+    .text-input:focus { border-color: rgba(0,180,216,0.5); }
+
+    .send-btn {
+      width: 40px; height: 40px;
+      border-radius: 50%;
+      background: rgba(0,180,216,0.13);
+      border: 0.5px solid var(--border);
+      color: var(--blue);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      flex-shrink: 0;
+      transition: background 0.15s, border-color 0.15s;
+      -webkit-tap-highlight-color: transparent;
+    }
+    .send-btn:active { background: rgba(0,180,216,0.28); border-color: var(--blue); transform: scale(0.93); }
+    .send-btn svg { width: 17px; height: 17px; pointer-events: none; }
+
+    /* safe area for notched phones */
+    @supports (padding-bottom: env(safe-area-inset-bottom)) {
+      .input-area { padding-bottom: calc(16px + env(safe-area-inset-bottom)); }
+    }
+  </style>
+</head>
+<body>
+<div id="app">
+  <div class="scan-line"></div>
+
+  <!-- Header -->
+  <div class="header">
+    <div class="status-dot"></div>
+    <div>
+      <div class="header-title">JARVIS</div>
+      <div class="header-sub">Just A Rather Very Intelligent System</div>
+    </div>
+    <div class="header-time" id="clock">--:--</div>
+  </div>
+
+  <!-- Orb -->
+  <div class="orb-area">
+    <div class="orb-wrap">
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb-ring"></div>
+      <div class="orb" id="orb" onclick="orbTap()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="rgba(0,180,216,0.85)" stroke-width="1.5">
+          <circle cx="12" cy="12" r="3"/>
+          <path d="M12 2v3M12 19v3M2 12h3M19 12h3"/>
+          <path d="M5.6 5.6l2.1 2.1M16.3 16.3l2.1 2.1M5.6 18.4l2.1-2.1M16.3 7.7l2.1-2.1" stroke-width="1"/>
+        </svg>
+      </div>
+    </div>
+    <div class="orb-label" id="orb-label">Standby</div>
+  </div>
+
+  <!-- Chat -->
+  <div class="chat" id="chat">
+    <div class="msg ai">
+      <div class="msg-speaker">JARVIS</div>
+      Good day. All systems are online and fully operational. How may I assist you?
+    </div>
+  </div>
+
+  <!-- Input -->
+  <div class="input-area">
+    <div class="quick-btns">
+      <button class="quick" onclick="sendQuick('What can you help me with?')">Capabilities</button>
+      <button class="quick" onclick="sendQuick('Tell me something fascinating.')">Surprise me</button>
+      <button class="quick" onclick="sendQuick('Give me a quick daily briefing.')">Daily brief</button>
+      <button class="quick" onclick="sendQuick('Help me solve a problem step by step.')">Problem solve</button>
+      <button class="quick" onclick="sendQuick('Tell me a joke, JARVIS.')">Humor mode</button>
+    </div>
+    <div class="input-row">
+      <textarea class="text-input" id="input" rows="1"
+        placeholder="Say something..."
+        onkeydown="handleKey(event)"
+        oninput="autoResize(this)"></textarea>
+      <button class="send-btn" onclick="sendMsg()">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M22 2L11 13M22 2L15 22l-4-9-9-4 20-7z"/>
+        </svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+  const SYSTEM = `You are JARVIS — a sophisticated, witty AI assistant inspired by the AI from Iron Man. You are precise, intelligent, occasionally dry-humored, and always composed. Address the user with warmth but formality. Keep responses concise and punchy — this is a mobile app, so 2–4 sentences is ideal unless more is needed. Use light technical language occasionally. Never break character. Current date/time: ${new Date().toLocaleString()}.`;
+
+  let history = [];
+  let busy = false;
+
+  // Clock
+  function tick() {
+    const now = new Date();
+    document.getElementById('clock').textContent =
+      now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+  }
+  tick();
+  setInterval(tick, 30000);
+
+  // Orb state
+  function setOrb(state) {
+    const orb = document.getElementById('orb');
+    const label = document.getElementById('orb-label');
+    orb.className = 'orb' + (state !== 'standby' ? ' ' + state : '');
+    label.textContent = { standby: 'Standby', listening: 'Listening', thinking: 'Processing' }[state] || 'Standby';
+  }
+
+  function orbTap() {
+    document.getElementById('input').focus();
+    setOrb('listening');
+    setTimeout(() => setOrb('standby'), 1800);
+  }
+
+  // Input helpers
+  function autoResize(el) {
+    el.style.height = 'auto';
+    el.style.height = Math.min(el.scrollHeight, 90) + 'px';
+  }
+
+  function handleKey(e) {
+    if (e.key === 'Enter' && !e.shiftKey) {
+      e.preventDefault();
+      sendMsg();
+    }
+  }
+
+  function sendQuick(text) {
+    document.getElementById('input').value = text;
+    sendMsg();
+  }
+
+  // Chat helpers
+  function appendMsg(role, text) {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = 'msg ' + (role === 'user' ? 'user' : 'ai');
+    if (role === 'ai') {
+      const sp = document.createElement('div');
+      sp.className = 'msg-speaker';
+      sp.textContent = 'JARVIS';
+      div.appendChild(sp);
+    }
+    const span = document.createElement('span');
+    span.textContent = text;
+    div.appendChild(span);
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function showThinking() {
+    const chat = document.getElementById('chat');
+    const div = document.createElement('div');
+    div.className = 'thinking-indicator';
+    div.id = 'thinking';
+    div.innerHTML = '<div class="dot"></div><div class="dot"></div><div class="dot"></div>';
+    chat.appendChild(div);
+    chat.scrollTop = chat.scrollHeight;
+  }
+
+  function hideThinking() {
+    const el = document.getElementById('thinking');
+    if (el) el.remove();
+  }
+
+  // Send
+  async function sendMsg() {
+    if (busy) return;
+    const input = document.getElementById('input');
+    const text = input.value.trim();
+    if (!text) return;
+
+    input.value = '';
+    input.style.height = 'auto';
+    appendMsg('user', text);
+    history.push({ role: 'user', content: text });
+
+    busy = true;
+    setOrb('thinking');
+    showThinking();
+
+    try {
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-6',
+          max_tokens: 1000,
+          system: SYSTEM,
+          messages: history
+        })
+      });
+
+      const data = await res.json();
+      const reply = (data.content || []).map(b => b.text || '').join('').trim()
+        || 'My apologies — the neural uplink encountered interference. Please try again.';
+
+      hideThinking();
+      appendMsg('ai', reply);
+      history.push({ role: 'assistant', content: reply });
+
+    } catch (err) {
+      hideThinking();
+      appendMsg('ai', 'Communications array offline. Please check your internet connection and try again.');
+    }
+
+    busy = false;
+    setOrb('standby');
+  }
+</script>
+</body>
+</html>
