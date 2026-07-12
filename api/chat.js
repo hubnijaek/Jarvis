@@ -4,6 +4,8 @@ module.exports = async function handler(req, res) {
   }
 
   try {
+    console.log("API Key exists:", !!process.env.GEMINI_API_KEY);
+
     const { messages = [], system = "" } = req.body;
 
     const prompt = [
@@ -24,35 +26,34 @@ module.exports = async function handler(req, res) {
         body: JSON.stringify({
           contents: [
             {
-              parts: [
-                {
-                  text: prompt,
-                },
-              ],
-            },
-          ],
-        }),
+              parts: [{ text: prompt }]
+            }
+          ]
+        })
       }
     );
 
     const data = await response.json();
 
+    console.log("Gemini response:", JSON.stringify(data, null, 2));
+
     if (!response.ok) {
       return res.status(response.status).json(data);
     }
 
-    return res.status(200).json({
+    return res.json({
       content: [
         {
-          text: data.candidates?.[0]?.content?.parts?.[0]?.text || "",
-        },
-      ],
+          text: data.candidates?.[0]?.content?.parts?.[0]?.text || ""
+        }
+      ]
     });
 
   } catch (err) {
     console.error(err);
     return res.status(500).json({
       error: err.message,
+      stack: err.stack
     });
   }
 };
