@@ -496,16 +496,24 @@
 
     try {
       console.log("Posting to", window.location.origin + "/api/chat");
+      
       const res = await fetch("/api/chat", {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: { 
+          "Content-Type': 'application/json" 
+        },
         body: JSON.stringify({
           system: SYSTEM,
           messages: history
         })
       });
+      console.log("Status:", res.status);
+      const text = await res.text();
+      console.log("Response:", text);
+      if (!res.ok) {
+        throw new Error('API error ${res.status}: ${text}');
+      const data = JSON.parse(text);
 
-      const data = await res.json();
       const reply = (data.content || []).map(b => b.text || '').join('').trim()
         || 'My apologies — the neural uplink encountered interference. Please try again.';
 
