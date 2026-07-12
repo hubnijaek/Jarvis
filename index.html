@@ -14,8 +14,8 @@
 
     :root {
       --blue: #00b4d8;
-      --cyan: #90e0ef;
-      --dark: #0a0f1e;
+      --cyan: #90b0ef;
+      --dark: #122f7e;
       --panel: rgba(0,180,216,0.06);
       --border: rgba(0,180,216,0.25);
       --glow: rgba(0,180,216,0.5);
@@ -37,9 +37,9 @@
       height: 100%;
       height: 100dvh;
       position: relative;
-      overflow: hidden;
-    }
+      overflow:  hidden;
 
+    }
     #app::before {
       content: '';
       position: absolute;
@@ -258,7 +258,7 @@
       z-index: 2;
     }
 
-    .quick-btns {
+    .quick-btns{
       display: flex;
       gap: 6px;
       margin-bottom: 10px;
@@ -308,10 +308,11 @@
       scrollbar-width: none;
       transition: border-color 0.2s;
       -webkit-appearance: none;
+    
     }
     .text-input::-webkit-scrollbar { display: none; }
     .text-input::placeholder { color: var(--muted); }
-    .text-input:focus { border-color: rgba(0,180,216,0.5); }
+    .text-input:focus { border-color: rgba(0,180,216,0.5); 
 
     .send-btn {
       width: 40px; height: 40px;
@@ -496,24 +497,16 @@
 
     try {
       console.log("Posting to", window.location.origin + "/api/chat");
-      
       const res = await fetch("/api/chat", {
         method: 'POST',
-        headers: { 
-          "Content-Type': 'application/json" 
-        },
+        headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           system: SYSTEM,
           messages: history
         })
       });
-      console.log("Status:", res.status);
-      const text = await res.text();
-      console.log("Response:", text);
-      if (!res.ok) {
-        throw new Error('API error ${res.status}: ${text}');
-      const data = JSON.parse(text);
 
+      const data = await res.json();
       const reply = (data.content || []).map(b => b.text || '').join('').trim()
         || 'My apologies — the neural uplink encountered interference. Please try again.';
 
